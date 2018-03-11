@@ -13,7 +13,7 @@ func (f *Frame) ptofcharptb(p int, pt image.Point, bn int) image.Point {
 
 	for ; bn < f.nbox; bn++ {
 		b = f.box[bn]
-		f.cklinewrap(&pt, b)
+		pt = f.cklinewrap(pt, b)
 		l := nrune(b)
 		if p < l {
 			if b.Nrune > 0 {
@@ -66,10 +66,11 @@ func (f *Frame) Charofpt(pt image.Point) int {
 
 	pt = f.grid(pt)
 	qt := f.Rect.Min
+	b = f.box[0]
 
 	for bn = 0; bn < f.nbox && qt.Y < pt.Y; bn++ {
 		b = f.box[bn]
-		f.cklinewrap(&pt, b)
+		pt = f.cklinewrap(pt, b)
 		if qt.Y >= pt.Y {
 			break
 		}
@@ -78,7 +79,8 @@ func (f *Frame) Charofpt(pt image.Point) int {
 	}
 
 	for ; bn < f.nbox && qt.X <= pt.X; bn++ {
-		f.cklinewrap(&qt, b)
+		b = f.box[bn]
+		qt = f.cklinewrap(qt, b)
 		if qt.Y > pt.Y {
 			break
 		}
@@ -92,7 +94,10 @@ func (f *Frame) Charofpt(pt image.Point) int {
 					if r == 0 {
 						panic("end of string in frcharofpt")
 					}
-					qt.X += f.Font.StringWidth(string(b.Ptr[s : s+1]))
+					// TODO(flux): This StringWidth handling seems wrong
+					// since a rune may be multiple bytes in a string.
+					//qt.X += f.Font.StringWidth(string(b.Ptr[s : s+1]))
+					qt.X += f.Font.StringWidth(string([]rune{r}))
 					if qt.X > pt.X {
 						break
 					}
